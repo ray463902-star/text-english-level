@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adaptive CEFR Quiz (A1→C2)</title>
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;background:#f5f7fb;color:#111}
+    .wrap{max-width:820px;margin:36px auto;padding:28px;background:white;border-radius:12px;box-shadow:0 6px 30px rgba(20,30,50,0.08)}
+    h1{margin:0 0 8px;font-size:20px}
+    .meta{color:#556; margin-bottom:18px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    label{font-size:13px;color:#444}
+    input[type=number]{width:72px;padding:6px;border-radius:6px;border:1px solid #ddd}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#246bfd;color:white;cursor:pointer}
+    .question-box{margin-top:16px}
+    .qtext{font-size:18px;margin-bottom:12px}
+    .opts{display:flex;flex-direction:column;gap:8px}
+    .opt{padding:10px;border-radius:8px;border:1px solid #e6e9ef;background:#fbfdff;cursor:pointer}
+    .opt.selected{border-color:#246bfd;background:#eef4ff}
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+    .small{font-size:13px;color:#667}
+    .result{padding:18px;background:#fcffef;border:1px solid #f0e7b8;border-radius:10px;margin-top:14px}
+    .level-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#f1f7ff;color:#124; font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Adaptive English Level Test — A1 → C2</h1>
+    <div class="meta">系统会根据你每题的回答自动调整难度，最后给出估计等级（CEFR）。</div>
+
+    <div class="controls">
+      <label>最小题数 <input id="minQ" type="number" min="6" value="12"/></label>
+      <label>最大题数 <input id="maxQ" type="number" min="8" value="25"/></label>
+      <label>开始等级 
+        <select id="startLevel">
+          <option value="0">A1</option>
+          <option value="1">A2</option>
+          <option value="2" selected>B1</option>
+          <option value="3">B2</option>
+          <option value="4">C1</option>
+          <option value="5">C2</option>
+        </select>
+      </label>
+      <button id="startBtn">开始测验</button>
+    </div>
+
+    <div id="quizArea" style="display:none">
+      <div class="small">题目 <span id="qIndex">0</span> / <span id="qMax">0</span> · 当前题目等级： <span id="curLevel" class="level-badge"></span></div>
+      <div class="question-box">
+        <div id="qText" class="qtext"></div>
+        <div id="opts" class="opts"></div>
+      </div>
+
+      <div class="footer">
+        <div class="small" id="infoBay"></div>
+        <div>
+          <button id="submitBtn">提交</button>
+          <button id="skipBtn">跳过</button>
+        </div>
+      </div>
+      <div id="progress" style="margin-top:10px" class="small"></div>
+    </div>
+
+    <div id="resultArea" style="display:none">
+      <h3>测评结果</h3>
+      <div id="resultSummary" class="result"></div>
+      <div style="margin-top:12px">
+        <button id="restartBtn">重新测一次</button>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;font-size:13px;color:#445">
+      想要我把题目库扩充成更多题，或改成阅读/听力/写作的题型？告诉我你想要的题型和数量，我可以帮你生成更多题目并放进题库里。
+    </div>
+  </div>
+
+<script>
+/* ====== 配置（你可以修改下面这些） ====== */
+const LEVELS = ["A1","A2","B1","B2","C1","C2"];
+// 题库：每题包含 {level:0..5, text, choices:[...], answerIndex}
+const QUESTION_BANK = [
+  // A1 示例题 (level 0)
+  {level:0, text:"Choose the correct word: I _____ a cat.", choices:["have","has","is","are"], answerIndex:0},
+  {level:0, text:"Which is a color?", choices:["Apple","Blue","Run","Dog"], answerIndex:1},
+  {level:0, text:"Complete: She ____ a doctor.", choices:["am","is","are","be"], answerIndex:1},
+  {level:0, text:"What is the opposite of 'big'?", choices:["small","green","fast","hot"], answerIndex:0},
+  {level:0, text:"Choose correct: 'I _____ 10 years old.'", choices:["am","is","are","be"], answerIndex:0},
+  {level:0, text:"Which one is a fruit?", choices:["Chair","Banana","Table","Shoe"], answerIndex:1},
+
+  // A2 (level 1)
+  {level:1, text:"Choose the right sentence:", choices:["He don't like coffee.","He doesn't like coffee.","He not like coffee.","He isn't likes coffee."], answerIndex:1},
+  {level:1, text:"I usually _____ to school by bus.", choices:["go","goes","going","went"], answerIndex:0},
+  {level:1, text:"Which is past of 'go'?", choices:["goed","went","gone","goes"], answerIndex:1},
+  {level:1, text:"Complete: There are _____ apples in the basket.", choices:["much","many","a","an"], answerIndex:1},
+  {level:1, text:"Choose correct preposition: I am good ____ math.", choices:["in","at","on","for"], answerIndex:1},
+  {level:1, text:"She asked him _____ his name.", choices:["what","who","when","how"], answerIndex:0},
+
+  // B1 (level 2)
+  {level:2, text:"Which sentence is correct?", choices:["If I will study, I will pass.","If I studied, I would pass.","If I study, I will pass.","If I study, I passed."], answerIndex:2},
+  {level:2, text:"Choose the best word: He made a _____ decision after thinking.", choices:["quick","quickly","quicker","quickness"], answerIndex:0},
+  {level:2, text:"Complete: I wish I _____ more time.", choices:["have","had","will have","would have"], answerIndex:1},
+  {level:2, text:"Pick the correct meaning of 'nevertheless'.", choices:["for example","in spite of that","after that","because of that"], answerIndex:1},
+  {level:2, text:"Which is a correct phrasal verb usage?", choices:["turn off the light","turn the light","off the turn light","put off the light"], answerIndex:0},
+  {level:2, text:"Choose the best connector: She studied hard; _____, she failed the exam.", choices:["however","so","because","and"], answerIndex:0},
+
+  // B2 (level 3)
+  {level:3, text:"Choose the sentence with correct subjunctive (formal):", choices:["I suggest that he studies more.","I suggest that he study more.","I suggest he will study more.","I suggest that he studied more."], answerIndex:1},
+  {level:3, text:"Select the best meaning for 'comprehensive'.", choices:["incomplete","including many details","small","fast"], answerIndex:1},
+  {level:3, text:"Which is correct usage? 'Had I known, ___.'", choices:["I would help you","I would have helped you","I will have helped you","I helped you"], answerIndex:1},
+  {level:3, text:"Identify the best collocation: 'make a _____ decision.'", choices:["strong","firm","heavy","loud"], answerIndex:1},
+  {level:3, text:"Choose the word closest to 'ambiguous'.", choices:["clear","vague","bright","simple"], answerIndex:1},
+  {level:3, text:"Complete the sentence: 'No sooner had she left _____.'", choices:["than it started raining","when it started raining","and it started raining","so it started raining"], answerIndex:0},
+
+  // C1 (level 4)
+  {level:4, text:"Pick the best phrase: 'To err is human; to _____ is divine.'", choices:["forgive","forgiving","be forgiven","forgiveness"], answerIndex:0},
+  {level:4, text:"Choose the closest meaning of 'ubiquitous'.", choices:["rare","everywhere","unknown","expensive"], answerIndex:1},
+  {level:4, text:"Which sentence is most formal?", choices:["We can't accept this.","We cannot accept this.","We are not able to accept this.","This is unacceptable."], answerIndex:1},
+  {level:4, text:"Complete: 'His argument was cogent, _____ it persuaded few.'", choices:["although","so","because","so that"], answerIndex:0},
+  {level:4, text:"Choose correct nuance: 'He is litigious.' Means:", choices:["likes law","sues others often","is educated","is humorous"], answerIndex:1},
+  {level:4, text:"Pick the best word: 'a plethora of options' ~", choices:["a few","an excess","a shortage","a part"], answerIndex:1},
+
+  // C2 (level 5)
+  {level:5, text:"Choose the best paraphrase of 'ephemeral'.", choices:["lasting a short time","eternal","hard to understand","well-known"], answerIndex:0},
+  {level:5, text:"Which sentence best demonstrates idiomatic mastery?", choices:["He cut to the chase and elucidated the point.","He cut the chase to elucidate the point.","He cut to the chase and elucidating the point.","He was cutting to chase to elucidate."], answerIndex:0},
+  {level:5, text:"Select the correct use: 'Notwithstanding the evidence, he persisted.' Means:", choices:["Because of evidence, he stopped","Despite the evidence, he persisted","He was aware of the evidence","He presented new evidence"], answerIndex:1},
+  {level:5, text:"Pick the best synonym for 'obfuscate'.", choices:["clarify","confuse","encourage","simplify"], answerIndex:1},
+  {level:5, text:"Complete: 'Had it not been for her advice, we _____ lost.'", choices:["would have","will have","would","have been"], answerIndex:0},
+  {level:5, text:"Which most closely equals 'tantamount'?", choices:["insignificant","equivalent in effect","contradictory","superior"], answerIndex:1}
+];
+
+/* ====== 内部状态（不用改） ====== */
+let posterior = new Array(6).fill(1); // prior (unnormalized)
+let askedIndices = new Set();
+let history = []; // {q, levelAsked, correct}
+let currentQuestion = null;
+let qIndex = 0;
+let minQ = 12, maxQ = 25;
+let startLevel = 2;
+
+/* ====== 工具函数 ====== */
+function normalize(arr){
+  const s = arr.reduce((a,b)=>a+b,0);
+  if(s === 0) return arr.map(()=>1/arr.length);
+  return arr.map(x=>x/s);
+}
+function entropy(dist){
+  return -dist.reduce((sum,p)=> sum + (p>0 ? p*Math.log2(p) : 0),0);
+}
+function estimatedLevel(){
+  const dist = normalize(posterior);
+  return dist.reduce((acc,p,i)=>acc + i*p,0); // expectation
+}
+function chooseNextLevel(){
+  const est = estimatedLevel();
+  // round to nearest, but bias towards exploration if that level's questions exhausted
+  let lvl = Math.round(est);
+  lvl = Math.max(0,Math.min(5,lvl));
+  return lvl;
+}
+function pickQuestionAtLevel(level){
+  // pick random question of that level that wasn't asked (if possible)
+  const candidates = QUESTION_BANK.map((q,i)=> ({q,i})).filter(o=>o.q.level===level && !askedIndices.has(o.i));
+  if(candidates.length === 0){
+    // fallback: any question not asked
+    const rest = QUESTION_BANK.map((q,i)=>({q,i})).filter(o=>!askedIndices.has(o.i));
+    if(rest.length === 0) return null;
+    return rest[Math.floor(Math.random()*rest.length)];
+  }
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+
+/* ====== 更新后验的模型参数 ======
+   模型假设：如果真实等级 >= 题目等级，则答对概率高 pHigh，否则 pLow。
+   我们用贝叶斯更新：posterior[level] *= likelihood(level)
+*/
+const pHighIfCorrect = 0.8; // 如果真实等级 >= qlevel，答对的可能性
+const pLowIfCorrect  = 0.3; // 如果真实等级 < qlevel，偶然答对的可能性
+const pHighIfWrong   = 1 - pHighIfCorrect; // 0.2
+const pLowIfWrong    = 1 - pLowIfCorrect;  // 0.7
+
+function updatePosterior(questionLevel, correct){
+  for(let L=0; L<posterior.length; L++){
+    if(correct){
+      posterior[L] *= (L >= questionLevel ? pHighIfCorrect : pLowIfCorrect);
+    } else {
+      posterior[L] *= (L >= questionLevel ? pHighIfWrong : pLowIfWrong);
+    }
+  }
+  // normalize to keep numbers bounded
+  posterior = normalize(posterior);
+}
+
+/* ====== UI 逻辑 ====== */
+const startBtn = document.getElementById('startBtn');
+const quizArea = document.getElementById('quizArea');
+const resultArea = document.getElementById('resultArea');
+const qText = document.getElementById('qText');
+const optsDiv = document.getElementById('opts');
+const submitBtn = document.getElementById('submitBtn');
+const skipBtn = document.getElementById('skipBtn');
+const qIndexSpan = document.getElementById('qIndex');
+const qMaxSpan = document.getElementById('qMax');
+const curLevelSpan = document.getElementById('curLevel');
+const infoBay = document.getElementById('infoBay');
+const progress = document.getElementById('progress');
+const resultSummary = document.getElementById('resultSummary');
+const restartBtn = document.getElementById('restartBtn');
+
+startBtn.onclick = ()=> {
+  // init from controls
+  minQ = Math.max(6, parseInt(document.getElementById('minQ').value) || 12);
+  maxQ = Math.max(minQ, parseInt(document.getElementById('maxQ').value) || 25);
+  startLevel = parseInt(document.getElementById('startLevel').value) || 2;
+
+  resetTest();
+  quizArea.style.display = 'block';
+  resultArea.style.display = 'none';
+  nextQuestion(startLevel);
+};
+
+function resetTest(){
+  posterior = new Array(6).fill(1);
+  posterior = normalize(posterior);
+  askedIndices.clear();
+  history = [];
+  currentQuestion = null;
+  qIndex = 0;
+  qMaxSpan.textContent = maxQ;
+  resultSummary.innerHTML = '';
+  progress.textContent = '';
+}
+
+function renderQuestion(obj){
+  currentQuestion = obj;
+  qText.textContent = obj.q.text;
+  optsDiv.innerHTML = '';
+  obj.q.choices.forEach((c,idx)=>{
+    const d = document.createElement('div');
+    d.className = 'opt';
+    d.textContent = c;
+    d.dataset.idx = idx;
+    d.onclick = ()=> {
+      Array.from(optsDiv.children).forEach(n=>n.classList.remove('selected'));
+      d.classList.add('selected');
+    };
+    optsDiv.appendChild(d);
+  });
+  qIndexSpan.textContent = qIndex;
+  curLevelSpan.textContent = LEVELS[obj.q.level];
+  infoBay.textContent = `已答 ${history.length} 题 · 当前估计等级：${(estimatedLevel()).toFixed(2)} (${LEVELS[Math.round(estimatedLevel())]})`;
+  progress.textContent = `熵（不确定度）： ${entropy(normalize(posterior)).toFixed(3)} （越小越确定）`;
+}
+
+function nextQuestion(preferredLevel){
+  qIndex++;
+  // choose a level to ask next (bias to preferredLevel)
+  let levelToAsk = preferredLevel !== undefined ? preferredLevel : chooseNextLevel();
+  // small exploration: with 15% prob pick adjacent level
+  if(Math.random() < 0.15){
+    const shift = Math.random() < 0.5 ? -1 : 1;
+    levelToAsk = Math.max(0, Math.min(5, levelToAsk + shift));
+  }
+  const picked = pickQuestionAtLevel(levelToAsk);
+  if(!picked){
+    // no questions left
+    finishTest();
+    return;
+  }
+  askedIndices.add(picked.i);
+  renderQuestion(picked);
+}
+
+submitBtn.onclick = ()=> {
+  if(!currentQuestion) return;
+  const sel = optsDiv.querySelector('.opt.selected');
+  if(!sel){
+    alert('请先选择一个选项（或点“跳过”）。');
+    return;
+  }
+  const chosen = parseInt(sel.dataset.idx);
+  const correct = chosen === currentQuestion.q.answerIndex;
+  history.push({q: currentQuestion.q.text, levelAsked: currentQuestion.q.level, correct});
+  updatePosterior(currentQuestion.q.level, correct);
+
+  // Decide whether to stop
+  const ent = entropy(normalize(posterior));
+  if(qIndex >= minQ && (ent < 0.45 || qIndex >= maxQ)){
+    finishTest();
+    return;
+  } else {
+    // continue
+    const nextLvl = chooseNextLevel();
+    nextQuestion(nextLvl);
+  }
+};
+
+skipBtn.onclick = ()=> {
+  // treat skip as partial info: slightly lowers probability of high levels for that level
+  if(!currentQuestion) return;
+  history.push({q: currentQuestion.q.text, levelAsked: currentQuestion.q.level, correct:false, skipped:true});
+  // make a gentle update as a wrong (since skipping doesn't show mastery)
+  updatePosterior(currentQuestion.q.level, false);
+
+  const ent = entropy(normalize(posterior));
+  if(qIndex >= minQ && (ent < 0.45 || qIndex >= maxQ)){
+    finishTest();
+    return;
+  } else {
+    const nextLvl = chooseNextLevel();
+    nextQuestion(nextLvl);
+  }
+};
+
+function finishTest(){
+  quizArea.style.display = 'none';
+  resultArea.style.display = 'block';
+  const est = estimatedLevel();
+  const rounded = Math.round(est);
+  const dist = normalize(posterior);
+  // build summary
+  let html = `<strong>估计等级： ${LEVELS[rounded]} （期望值 ${est.toFixed(2)}）</strong><br/>`;
+  html += `<div style="margin-top:8px">后验各等级概率：<br/><ul>`;
+  for(let i=0;i<LEVELS.length;i++){
+    html += `<li>${LEVELS[i]}: ${(dist[i]*100).toFixed(1)}%</li>`;
+  }
+  html += `</ul></div>`;
+  html += `<div style="margin-top:8px">题目历史（最近 ${Math.min(history.length,30)} 条）：<ol>`;
+  for(let i=0;i<history.length;i++){
+    const h = history[i];
+    html += `<li>[${LEVELS[h.levelAsked]}] ${h.q} — ${h.correct ? '<span style="color:green">正确</span>' : (h.skipped?'<span style="color:orange">跳过</span>':'<span style="color:red">错误</span>')}</li>`;
+  }
+  html += `</ol></div>`;
+
+  resultSummary.innerHTML = html;
+}
+
+restartBtn.onclick = ()=> {
+  quizArea.style.display = 'none';
+  resultArea.style.display = 'none';
+};
+
+</script>
+</body>
+</html>
