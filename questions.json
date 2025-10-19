@@ -1,0 +1,200 @@
+[
+  {
+    "level": 0,
+    "text": "Choose the correct word: I ___ a cat.",
+    "choices": [
+      "have",
+      "has",
+      "is",
+      "are"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 0,
+    "text": "Complete: She ___ a doctor.",
+    "choices": [
+      "am",
+      "is",
+      "are",
+      "be"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 0,
+    "text": "What is the opposite of 'big'?",
+    "choices": [
+      "small",
+      "green",
+      "fast",
+      "hot"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 1,
+    "text": "Choose the right sentence:",
+    "choices": [
+      "He don't like coffee.",
+      "He doesn't like coffee.",
+      "He not like coffee.",
+      "He isn't likes coffee."
+    ],
+    "answer": 1
+  },
+  {
+    "level": 1,
+    "text": "I usually ___ to school by bus.",
+    "choices": [
+      "go",
+      "goes",
+      "going",
+      "went"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 1,
+    "text": "Complete: There are ___ apples in the basket.",
+    "choices": [
+      "much",
+      "many",
+      "a",
+      "an"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 2,
+    "text": "Which sentence is correct?",
+    "choices": [
+      "If I will study, I will pass.",
+      "If I studied, I would pass.",
+      "If I study, I will pass.",
+      "If I study, I passed."
+    ],
+    "answer": 2
+  },
+  {
+    "level": 2,
+    "text": "Choose the best word: He made a ___ decision after thinking.",
+    "choices": [
+      "quick",
+      "quickly",
+      "quicker",
+      "quickness"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 2,
+    "text": "Pick the correct meaning of 'nevertheless'.",
+    "choices": [
+      "for example",
+      "in spite of that",
+      "after that",
+      "because of that"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 3,
+    "text": "Choose the sentence with correct subjunctive:",
+    "choices": [
+      "I suggest that he studies more.",
+      "I suggest that he study more.",
+      "I suggest he will study more.",
+      "I suggest that he studied more."
+    ],
+    "answer": 1
+  },
+  {
+    "level": 3,
+    "text": "Select the best meaning for 'comprehensive'.",
+    "choices": [
+      "incomplete",
+      "including many details",
+      "small",
+      "fast"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 3,
+    "text": "Complete: 'No sooner had she left ___.'",
+    "choices": [
+      "than it started raining",
+      "when it started raining",
+      "and it started raining",
+      "so it started raining"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 4,
+    "text": "Pick the best phrase: 'To err is human; to ___ is divine.'",
+    "choices": [
+      "forgive",
+      "forgiving",
+      "be forgiven",
+      "forgiveness"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 4,
+    "text": "Choose the closest meaning of 'ubiquitous'.",
+    "choices": [
+      "rare",
+      "everywhere",
+      "unknown",
+      "expensive"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 4,
+    "text": "Complete: 'His argument was cogent, ___ it persuaded few.'",
+    "choices": [
+      "although",
+      "so",
+      "because",
+      "so that"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 5,
+    "text": "Choose the best paraphrase of 'ephemeral'.",
+    "choices": [
+      "lasting a short time",
+      "eternal",
+      "hard to understand",
+      "well-known"
+    ],
+    "answer": 0
+  },
+  {
+    "level": 5,
+    "text": "Pick the best synonym for 'obfuscate'.",
+    "choices": [
+      "clarify",
+      "confuse",
+      "encourage",
+      "simplify"
+    ],
+    "answer": 1
+  },
+  {
+    "level": 5,
+    "text": "Complete: 'Had it not been for her advice, we ___ lost.'",
+    "choices": [
+      "would have",
+      "will have",
+      "would",
+      "have been"
+    ],
+    "answer": 0
+  }
+]
